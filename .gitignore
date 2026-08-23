@@ -3,3 +3,5 @@ target
 out
 book.pdf
 example.txt
+*.papyrus
+dependency-reduced-pom.xml
