@@ -1,3 +1,5 @@
+import merkle.MerkleTree;
+import merkle.Sha256MerkleTree;
 import org.junit.jupiter.api.Test;
 
 import java.util.HashMap;
@@ -11,6 +13,8 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class PapyrusSpec {
+
+    private static final MerkleTree MERKLE = new Sha256MerkleTree();
 
     @Test
     void freshInstanceHasNoFieldsSet() {
@@ -71,11 +75,11 @@ class PapyrusSpec {
     private static Papyrus emptyPapyrusFor(byte[][] pages) {
         byte[][] leafHashes = new byte[pages.length][];
         for (int i = 0; i < pages.length; i++) {
-            leafHashes[i] = MerkleTree.leafHash(i, pages[i]);
+            leafHashes[i] = MERKLE.leafHash(i, pages[i]);
         }
 
         PapyrusMetadata metadata = new PapyrusMetadata();
-        metadata.fingerprint = MerkleTree.root(leafHashes);
+        metadata.fingerprint = MERKLE.root(leafHashes);
         metadata.totalPages = (long) pages.length;
 
         Papyrus papyrus = new Papyrus();
@@ -87,10 +91,10 @@ class PapyrusSpec {
     private static Leaf leafFor(byte[][] pages, int page) {
         byte[][] leafHashes = new byte[pages.length][];
         for (int i = 0; i < pages.length; i++) {
-            leafHashes[i] = MerkleTree.leafHash(i, pages[i]);
+            leafHashes[i] = MERKLE.leafHash(i, pages[i]);
         }
-        byte[] root = MerkleTree.root(leafHashes);
-        byte[][] proof = MerkleTree.proof(leafHashes, page);
+        byte[] root = MERKLE.root(leafHashes);
+        byte[][] proof = MERKLE.proof(leafHashes, page);
         return new Leaf((long) page, (long) pages.length, root, proof, pages[page]);
     }
 

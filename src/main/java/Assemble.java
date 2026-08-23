@@ -1,3 +1,5 @@
+import merkle.MerkleTree;
+import merkle.Sha256MerkleTree;
 import picocli.CommandLine;
 import picocli.CommandLine.Command;
 import picocli.CommandLine.Option;
@@ -26,6 +28,8 @@ class Assemble implements Callable<Integer> {
     @Option(names = {"-d", "--fragments-dir"}, description = "Directory for fragment files (default: ${DEFAULT-VALUE}).")
     private Path fragmentsDir = Path.of("out");
 
+    private static final MerkleTree MERKLE = new Sha256MerkleTree();
+
     static Papyrus split(byte[] data, int pageSize) {
         if (data.length == 0) {
             throw new IllegalArgumentException("cannot split an empty file");
@@ -41,9 +45,9 @@ class Assemble implements Callable<Integer> {
 
         byte[][] leafHashes = new byte[totalPages][];
         for (int page = 0; page < totalPages; page++) {
-            leafHashes[page] = MerkleTree.leafHash(page, blocks[page]);
+            leafHashes[page] = MERKLE.leafHash(page, blocks[page]);
         }
-        byte[] root = MerkleTree.root(leafHashes);
+        byte[] root = MERKLE.root(leafHashes);
 
         PapyrusMetadata metadata = new PapyrusMetadata();
         metadata.fingerprint = root;
@@ -54,7 +58,7 @@ class Assemble implements Callable<Integer> {
         papyrus.status = Status.EMPTY;
 
         for (int page = 0; page < totalPages; page++) {
-            byte[][] proof = MerkleTree.proof(leafHashes, page);
+            byte[][] proof = MERKLE.proof(leafHashes, page);
             papyrus.addFragment(new Leaf((long) page, (long) totalPages, root, proof, blocks[page]));
         }
 

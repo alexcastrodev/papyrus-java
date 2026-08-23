@@ -1,8 +1,14 @@
+import merkle.MerkleTree;
+import merkle.Sha256MerkleTree;
+
 import java.io.ByteArrayOutputStream;
 import java.util.HashMap;
 import java.util.Map;
 
 class Papyrus {
+
+    private static final MerkleTree MERKLE = new Sha256MerkleTree();
+
     PapyrusMetadata metadata;
     Status status;
     Map<Long, Leaf> fragments;
@@ -11,7 +17,7 @@ class Papyrus {
         if (!java.util.Arrays.equals(leaf.rootFingerprint, metadata.fingerprint) || !leaf.totalPages.equals(metadata.totalPages)) {
             throw new IllegalArgumentException("leaf does not belong to this papyrus");
         }
-        if (!MerkleTree.verify(leaf.page, leaf.data, leaf.merkleProof, metadata.fingerprint)) {
+        if (!MERKLE.verify(leaf.page, leaf.data, leaf.merkleProof, metadata.fingerprint)) {
             throw new IllegalArgumentException("invalid Merkle proof for page " + leaf.page);
         }
 

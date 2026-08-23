@@ -1,16 +1,18 @@
+package merkle;
+
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-class MerkleTree {
+public class Sha256MerkleTree implements MerkleTree {
 
-    static byte[] leafHash(long page, byte[] data) {
+    public byte[] leafHash(long page, byte[] data) {
         return sha256(longToBytes(page), data);
     }
 
-    static byte[] root(byte[][] leafHashes) {
+    public byte[] root(byte[][] leafHashes) {
         if (leafHashes.length == 0) {
             throw new IllegalArgumentException("cannot build a Merkle tree with no leaves");
         }
@@ -18,7 +20,7 @@ class MerkleTree {
         return levels.get(levels.size() - 1)[0];
     }
 
-    static byte[][] proof(byte[][] leafHashes, int index) {
+    public byte[][] proof(byte[][] leafHashes, int index) {
         List<byte[][]> levels = levels(leafHashes);
         List<byte[]> path = new ArrayList<>();
         int idx = index;
@@ -32,7 +34,7 @@ class MerkleTree {
         return path.toArray(new byte[0][]);
     }
 
-    static boolean verify(long page, byte[] data, byte[][] proof, byte[] root) {
+    public boolean verify(long page, byte[] data, byte[][] proof, byte[] root) {
         byte[] computed = leafHash(page, data);
         for (byte[] sibling : proof) {
             computed = pairHash(computed, sibling);
