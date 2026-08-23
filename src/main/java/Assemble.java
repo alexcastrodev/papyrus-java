@@ -7,10 +7,11 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.concurrent.Callable;
 
 @Command(name = "assemble", mixinStandardHelpOptions = true,
-        description = "Splits a file into Papyrus fragments backed by a Merkle tree.")
+        description = "Splits a file into an empty Papyrus base plus separate fragment files.")
 class Assemble implements Callable<Integer> {
 
     @Parameters(index = "0", description = "File to split.")
@@ -21,6 +22,9 @@ class Assemble implements Callable<Integer> {
 
     @Option(names = {"-o", "--output"}, description = "Output .papyrus file (default: <file>.papyrus).")
     private Path output;
+
+    @Option(names = {"-d", "--fragments-dir"}, description = "Directory for fragment files (default: ${DEFAULT-VALUE}).")
+    private Path fragmentsDir = Path.of("out");
 
     static Papyrus split(byte[] data, int pageSize) {
         if (data.length == 0) {
@@ -64,9 +68,22 @@ class Assemble implements Callable<Integer> {
             byte[] data = Files.readAllBytes(file);
             Papyrus papyrus = split(data, pageSize);
             papyrus.metadata.fileName = file.getFileName().toString();
-            PapyrusFile.write(papyrus, destination);
-            System.out.println("[Assemble] totalPages=" + papyrus.metadata.totalPages + " status=" + papyrus.status
-                    + " -> " + destination.toAbsolutePath());
+
+            Papyrus base = new Papyrus();
+            base.metadata = papyrus.metadata;
+            base.status = Status.EMPTY;
+            base.fragments = new HashMap<>();
+            PapyrusFile.write(base, destination);
+
+            Files.createDirectories(fragmentsDir);
+            String fragmentPrefix = file.getFileName().toString();
+            for (Leaf leaf : papyrus.fragments.values()) {
+                Path fragmentPath = fragmentsDir.resolve(fragmentPrefix + "." + leaf.page + ".frag");
+                FragmentFile.write(leaf, fragmentPath);
+            }
+
+            System.out.println("[Assemble] totalPages=" + papyrus.metadata.totalPages + " base -> "
+                    + destination.toAbsolutePath() + " fragments -> " + fragmentsDir.toAbsolutePath());
             return 0;
         } catch (IOException e) {
             System.out.println("[Assemble] Cannot read/write file: " + e.getMessage());

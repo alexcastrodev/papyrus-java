@@ -108,7 +108,7 @@ class PapyrusFile {
         return papyrus;
     }
 
-    private static void writeByteArray(DataOutputStream out, byte[] array) throws IOException {
+    static void writeByteArray(DataOutputStream out, byte[] array) throws IOException {
         if (array == null) {
             out.writeInt(-1);
             return;
@@ -117,7 +117,7 @@ class PapyrusFile {
         out.write(array);
     }
 
-    private static byte[] readByteArray(DataInputStream in) throws IOException {
+    static byte[] readByteArray(DataInputStream in) throws IOException {
         int length = in.readInt();
         if (length == -1) {
             return null;
