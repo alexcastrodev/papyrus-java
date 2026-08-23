@@ -40,7 +40,3 @@ class Papyrus {
         return out.toByteArray();
     }
 }
-
-enum Status {
-    EMPTY, PARTIAL, COMPLETED
-}
